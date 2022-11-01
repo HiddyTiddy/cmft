@@ -1,11 +1,7 @@
-
-
-
 mod tests {
 
     #[test]
-    fn examples()
-    {
+    fn examples() {
         println!("Hi");
     }
 }
