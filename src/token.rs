@@ -1,5 +1,7 @@
 use std::str::FromStr;
 
+/// A Parsing Error
+#[derive(Debug)]
 pub struct ParseError;
 
 /// the location of a token in the program,
@@ -10,6 +12,12 @@ pub struct Location {
     pub line: usize,
     /// the (0-indexed) column of the token
     pub col: usize,
+}
+
+impl Location {
+    pub fn new(line: usize, col: usize) -> Self {
+        Self { line, col }
+    }
 }
 
 /// represents an operator type
@@ -156,6 +164,7 @@ impl OpType {
     }
 }
 
+/// Punctuation
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PunctType {
     /// the punctuation ,
@@ -164,8 +173,11 @@ pub enum PunctType {
     Arrow,
     /// the punctuation .
     Dot,
+    /// the punctuation ;
+    Semicolon,
 }
 
+/// Parentheses etc
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ParenType {
     /// open parenthesis (
@@ -182,18 +194,59 @@ pub enum ParenType {
     RBrack,
 }
 
+/// Type of a token
 #[derive(Debug, PartialEq, Eq)]
 pub enum TokenType<'a> {
     Keyword(&'a str),
     Operator(OpType),
+    /// a string literal; including the quotes
     Str(&'a str),
+    /// any other literal value, characters are including the quotes
     Const(&'a str),
     Punctuation(PunctType),
     Indentifier(&'a str),
+    Whitespace(&'a str),
+    Linebreak,
 }
 
+impl<'a> TokenType<'a> {
+    /// returns the number of columns this token spans
+    pub fn width(&self) -> usize {
+        macro_rules! strlen {
+            ($s:expr) => {
+                $s.chars().count()
+            };
+        }
+        match self {
+            TokenType::Keyword(kword) => strlen!(kword),
+            TokenType::Operator(op) => strlen!(op.to_str()),
+            TokenType::Str(lit) => strlen!(lit),
+            TokenType::Const(cons) => strlen!(cons),
+            TokenType::Punctuation(_) => 1, // maybe todo
+            TokenType::Indentifier(ident) => strlen!(ident),
+            TokenType::Whitespace(sp) => strlen!(sp),
+            TokenType::Linebreak => todo!(), // TODO: cross platform support
+        }
+    }
+
+    // returns the number of rows this token spans
+    pub const fn height(&self) -> usize {
+        1
+    }
+}
+
+/// a token and its location
 #[derive(Debug, PartialEq, Eq)]
 pub struct Token<'a> {
-    token_type: TokenType<'a>,
-    location: Location,
+    pub(crate) token_type: TokenType<'a>,
+    pub(crate) location: Location,
+}
+
+impl<'a> Token<'a> {
+    pub fn new(token_type: TokenType<'a>, location: Location) -> Self {
+        Self {
+            token_type,
+            location,
+        }
+    }
 }
