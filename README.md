@@ -4,7 +4,7 @@ C formatter
 
 ## usage
 
-- install rust toolchain
+- install rust tool chain
 - clone the repository
 - cargo build --release
 - ./target/release/cmft <options>
