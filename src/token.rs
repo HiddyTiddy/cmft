@@ -175,6 +175,10 @@ pub enum PunctType {
     Dot,
     /// the punctuation ;
     Semicolon,
+    /// the punctuation ?
+    QuestionMark,
+    /// the punctuation :
+    Colon,
 }
 
 /// Parentheses etc
@@ -207,6 +211,7 @@ pub enum TokenType<'a> {
     Indentifier(&'a str),
     Whitespace(&'a str),
     Linebreak,
+    Comment(&'a str),
 }
 
 impl<'a> TokenType<'a> {
@@ -222,16 +227,46 @@ impl<'a> TokenType<'a> {
             TokenType::Operator(op) => strlen!(op.to_str()),
             TokenType::Str(lit) => strlen!(lit),
             TokenType::Const(cons) => strlen!(cons),
-            TokenType::Punctuation(_) => 1, // maybe todo
+            TokenType::Punctuation(pt) => match pt {
+                PunctType::Comma
+                | PunctType::Dot
+                | PunctType::Semicolon
+                | PunctType::QuestionMark
+                | PunctType::Colon => 1,
+                PunctType::Arrow => 2,
+            },
             TokenType::Indentifier(ident) => strlen!(ident),
             TokenType::Whitespace(sp) => strlen!(sp),
-            TokenType::Linebreak => todo!(), // TODO: cross platform support
+            TokenType::Comment(com) => strlen!(com) + 2,
+            TokenType::Linebreak => todo!(),
         }
     }
 
-    // returns the number of rows this token spans
+    /// returns the number of rows this token spans
     pub const fn height(&self) -> usize {
         1
+    }
+
+    /// returns the length of the source text represented by the token in bytes
+    pub(crate) fn len(&self) -> usize {
+        match self {
+            TokenType::Keyword(kword) => kword.len(),
+            TokenType::Operator(op) => op.to_str().len(),
+            TokenType::Str(lit) => lit.len(),
+            TokenType::Const(cons) => cons.len(),
+            TokenType::Punctuation(pt) => match pt {
+                PunctType::Comma
+                | PunctType::Dot
+                | PunctType::Semicolon
+                | PunctType::QuestionMark
+                | PunctType::Colon => 1,
+                PunctType::Arrow => 2,
+            },
+            TokenType::Indentifier(ident) => ident.len(),
+            TokenType::Whitespace(sp) => sp.len(),
+            TokenType::Comment(com) => com.len() + 2,
+            TokenType::Linebreak => todo!(), // TODO: cross platform support
+        }
     }
 }
 
