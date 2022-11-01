@@ -1,4 +1,4 @@
-use crate::{Location, PunctType, Token, TokenType};
+use crate::{Location, OpType, PunctType, Token, TokenType};
 
 #[derive(Debug)]
 pub struct Tokenizer<'a> {
@@ -34,6 +34,41 @@ impl<'a> Tokenizer<'a> {
         } else {
             self.data = &self.data[before.len()..];
             self.col += before.chars().count();
+            // fixme, this shouldnt be an ident but rather something that is decided depending on
+            // the content of the `before` variable
+            Token::new(TokenType::Indentifier(before), loc)
+        }
+    }
+
+    // two chars and not in general because dont need it
+    fn delimiter_two_chars<'b, 'c, F>(
+        &mut self,
+        ch: char,
+        delimiter: F,
+        before: &'c str,
+    ) -> Token<'a>
+    where
+        'c: 'a,
+        'b: 'a,
+        F: Fn(char) -> TokenType<'b>,
+    {
+        let loc = Location::new(self.row, self.col);
+
+        let mut iter = self.data[before.len() + ch.len_utf8()..].chars();
+        let ch_after = iter.next();
+        let corresponds = delimiter(ch_after.unwrap_or('\0')); // just dont have a string
+                                                               // with a NUL character in it what could go wrong
+        let len = corresponds.width();
+
+        if before.is_empty() {
+            self.col += len;
+            self.data = &self.data[corresponds.len()..];
+            Token::new(corresponds, loc)
+        } else {
+            self.data = &self.data[before.len()..];
+            self.col += before.chars().count();
+            // fixme, this shouldnt be an ident but rather something that is decided depending on
+            // the content of the `before` variable
             Token::new(TokenType::Indentifier(before), loc)
         }
     }
@@ -68,8 +103,41 @@ impl<'a> Iterator for Tokenizer<'a> {
                         before,
                     ))
                 }
+                '-' => {
+                    return Some(self.delimiter_two_chars(
+                        '-',
+                        |b| match b {
+                            '>' => TokenType::Punctuation(PunctType::Arrow),
+                            '=' => TokenType::Operator(OpType::SubAssign),
+                            _ => TokenType::Operator(OpType::Sub),
+                        },
+                        before,
+                    ))
+                }
+                '+' => {
+                    return Some(self.delimiter_two_chars(
+                        '+',
+                        |b| match b {
+                            '=' => TokenType::Operator(OpType::PlusAssign),
+                            _ => TokenType::Operator(OpType::Plus),
+                        },
+                        before,
+                    ))
+                }
+                '&' => {
+                    return Some(self.delimiter_two_chars(
+                        '&',
+                        |b| match b {
+                            '=' => TokenType::Operator(OpType::LAndAssign),
+                            '&' => TokenType::Operator(OpType::And),
+                            _ => TokenType::Operator(OpType::LAnd),
+                        },
+                        before,
+                    ))
+                }
 
-                _ => {}
+                'a'..='z' | 'A'..='Z' => {}
+                x => todo!("hit case {x:?}. this is a problem for future me. if you hit this you are future me."),
             }
         }
         None
@@ -78,7 +146,7 @@ impl<'a> Iterator for Tokenizer<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{TokenType, Tokenizer};
+    use crate::{OpType, PunctType, TokenType, Tokenizer};
 
     #[test]
     fn only_semicolons() {
@@ -106,8 +174,27 @@ mod tests {
 
         let mut cur_ind = 0;
         for (i, j) in tok.zip(expected) {
-            dbg!(cur_ind);
-            dbg!(&i);
+            assert_eq!(i.token_type, j);
+            assert_eq!(i.location.line, 0);
+            assert_eq!(i.location.col, cur_ind);
+            cur_ind += j.width();
+        }
+    }
+
+    #[test]
+    fn multichar() {
+        let program = "ab->cd+=-";
+        let expected = vec![
+            TokenType::Indentifier("ab"),
+            TokenType::Punctuation(PunctType::Arrow),
+            TokenType::Indentifier("cd"),
+            TokenType::Operator(OpType::PlusAssign),
+            TokenType::Operator(OpType::Sub),
+        ];
+        let tok = Tokenizer::new(program);
+
+        let mut cur_ind = 0;
+        for (i, j) in tok.zip(expected) {
             assert_eq!(i.token_type, j);
             assert_eq!(i.location.line, 0);
             assert_eq!(i.location.col, cur_ind);
