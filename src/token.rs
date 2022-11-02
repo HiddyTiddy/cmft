@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{borrow::Cow, str::FromStr};
 
 /// A Parsing Error
 #[derive(Debug)]
@@ -181,6 +181,19 @@ pub enum PunctType {
     Colon,
 }
 
+impl PunctType {
+    fn to_str(self) -> &'static str {
+        match self {
+            PunctType::Comma => ",",
+            PunctType::Arrow => "->",
+            PunctType::Dot => ".",
+            PunctType::Semicolon => ";",
+            PunctType::QuestionMark => "?",
+            PunctType::Colon => ":",
+        }
+    }
+}
+
 /// Parentheses etc
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ParenType {
@@ -266,6 +279,20 @@ impl<'a> TokenType<'a> {
             TokenType::Whitespace(sp) => sp.len(),
             TokenType::Comment(com) => com.len() + 2,
             TokenType::Linebreak => todo!(), // TODO: cross platform support
+        }
+    }
+
+    pub fn to_str(self) -> Cow<'a, str> {
+        match self {
+            TokenType::Keyword(kw) => Cow::Borrowed(kw),
+            TokenType::Operator(op) => Cow::Borrowed(op.to_str()),
+            TokenType::Str(s) => Cow::Borrowed(s),
+            TokenType::Const(con) => Cow::Borrowed(con),
+            TokenType::Punctuation(pt) => Cow::Borrowed(pt.to_str()),
+            TokenType::Indentifier(ident) => Cow::Borrowed(ident),
+            TokenType::Whitespace(_) => todo!(),
+            TokenType::Linebreak => todo!(),
+            TokenType::Comment(com) => Cow::Owned(format!("//{com}")),
         }
     }
 }
