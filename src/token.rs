@@ -222,7 +222,6 @@ pub enum TokenType<'a> {
     Const(&'a str),
     Punctuation(PunctType),
     Indentifier(&'a str),
-    Whitespace(&'a str),
     Linebreak,
     Comment(&'a str),
 }
@@ -249,7 +248,6 @@ impl<'a> TokenType<'a> {
                 PunctType::Arrow => 2,
             },
             TokenType::Indentifier(ident) => strlen!(ident),
-            TokenType::Whitespace(sp) => strlen!(sp),
             TokenType::Comment(com) => strlen!(com) + 2,
             TokenType::Linebreak => todo!(),
         }
@@ -276,7 +274,6 @@ impl<'a> TokenType<'a> {
                 PunctType::Arrow => 2,
             },
             TokenType::Indentifier(ident) => ident.len(),
-            TokenType::Whitespace(sp) => sp.len(),
             TokenType::Comment(com) => com.len() + 2,
             TokenType::Linebreak => todo!(), // TODO: cross platform support
         }
@@ -290,7 +287,6 @@ impl<'a> TokenType<'a> {
             TokenType::Const(con) => Cow::Borrowed(con),
             TokenType::Punctuation(pt) => Cow::Borrowed(pt.to_str()),
             TokenType::Indentifier(ident) => Cow::Borrowed(ident),
-            TokenType::Whitespace(_) => todo!(),
             TokenType::Linebreak => todo!(),
             TokenType::Comment(com) => Cow::Owned(format!("//{com}")),
         }
