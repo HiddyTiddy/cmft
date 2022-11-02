@@ -140,7 +140,20 @@ impl<'a> Iterator for Tokenizer<'a> {
                 x => todo!("hit case {x:?}. this is a problem for future me. if you hit this you are future me."),
             }
         }
-        None
+
+        if self.data.is_empty() {
+            None
+        } else {
+            let out = self.data;
+            self.data = "";
+
+            // fixme, this shouldnt be an ident but rather something that is decided depending on
+            // the content of the `before` variable
+            Some(Token::new(
+                TokenType::Indentifier(out),
+                Location::new(self.row, self.col),
+            ))
+        }
     }
 }
 
