@@ -78,7 +78,8 @@ impl<'a> Iterator for Tokenizer<'a> {
     type Item = Token<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        for (i, ch) in self.data.char_indices() {
+        let mut iter = self.data.char_indices();
+        while let Some((i, ch)) = iter.next() {
             let before = &self.data[..i];
 
             match ch {
@@ -134,6 +135,22 @@ impl<'a> Iterator for Tokenizer<'a> {
                         },
                         before,
                     ))
+                }
+
+                ' ' => {
+                    if before.is_empty() {
+                        self.col += 1;
+                        self.data = &self.data[' '.len_utf8()..];
+                        iter = self.data.char_indices();
+                    } else {
+                        let loc = Location::new(self.row, self.col);
+                        self.data = &self.data[before.len() ..];
+                        self.col += before.chars().count();
+                        // fixme, this shouldnt be an ident but rather something that is decided depending on
+                        // the content of the `before` variable
+                        return Some(Token::new(TokenType::Indentifier(before), loc));
+                    }
+
                 }
 
                 'a'..='z' | 'A'..='Z' => {}
