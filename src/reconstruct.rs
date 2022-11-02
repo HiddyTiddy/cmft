@@ -33,7 +33,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::tokenizer::Tokenizer;
+    use crate::{tokenizer::Tokenizer, TokenType};
 
     use super::reconstruct;
 
@@ -48,6 +48,25 @@ mod tests {
 
     #[test]
     fn spaces() {
+        let program = "abc; ed ;";
+        let tokenizer = Tokenizer::new(program).inspect(|lit| {
+            if let TokenType::Indentifier(id) = lit.token_type {
+                assert!(!id.ends_with(char::is_whitespace));
+                assert!(!id.starts_with(char::is_whitespace));
+                assert!(id
+                    .chars()
+                    .map(|i| matches!(i, 'a'..='z' | 'A'..='Z' | '0'..='9'))
+                    .reduce(|a, b| a && b)
+                    .unwrap());
+            }
+        });
+
+        let reconstructed = reconstruct(tokenizer);
+        assert_eq!(program, reconstructed);
+    }
+
+    #[test]
+    fn newline() {
         let program = "abc;\n       ed;";
         let tokenizer = Tokenizer::new(program);
 
