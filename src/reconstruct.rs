@@ -65,6 +65,7 @@ mod tests {
         assert_eq!(program, reconstructed);
     }
 
+    #[ignore]
     #[test]
     fn newline() {
         let program = "abc;\n       ed;";
