@@ -1,6 +1,6 @@
+#[cfg(test)]
 mod tests {
     use std::fs;
-    use std::process::Command;
 
     #[test]
     fn examples() {
@@ -12,12 +12,12 @@ mod tests {
                 continue;
             }
             let file_name_out = file_name_in.replace(".in", ".out");
-            let command = Command::new("echo").arg("Hi").output().expect("lmao");
-            let input = fs::read_to_string(file_name_in).unwrap();
+            let input  = fs::read_to_string(file_name_in).unwrap();
             let output = fs::read_to_string(file_name_out).unwrap();
             println!("{}", input);
             println!("{}", output);
             let result = cmft::format_string(input);
+            println!("{}", result);
             assert_eq!(output, result)
         }
     }
