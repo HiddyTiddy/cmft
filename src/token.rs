@@ -1,5 +1,7 @@
 use std::{borrow::Cow, str::FromStr};
 
+use crate::LINE_ENDING;
+
 /// A Parsing Error
 #[derive(Debug)]
 pub struct ParseError;
@@ -249,7 +251,7 @@ impl<'a> TokenType<'a> {
             },
             TokenType::Indentifier(ident) => strlen!(ident),
             TokenType::Comment(com) => strlen!(com) + 2,
-            TokenType::Linebreak => todo!(),
+            TokenType::Linebreak => strlen!(LINE_ENDING),
         }
     }
 
@@ -275,7 +277,7 @@ impl<'a> TokenType<'a> {
             },
             TokenType::Indentifier(ident) => ident.len(),
             TokenType::Comment(com) => com.len() + 2,
-            TokenType::Linebreak => todo!(), // TODO: cross platform support
+            TokenType::Linebreak => LINE_ENDING.len(),
         }
     }
 
@@ -287,7 +289,7 @@ impl<'a> TokenType<'a> {
             TokenType::Const(con) => Cow::Borrowed(con),
             TokenType::Punctuation(pt) => Cow::Borrowed(pt.to_str()),
             TokenType::Indentifier(ident) => Cow::Borrowed(ident),
-            TokenType::Linebreak => todo!(),
+            TokenType::Linebreak => Cow::Borrowed(LINE_ENDING),
             TokenType::Comment(com) => Cow::Owned(format!("//{com}")),
         }
     }

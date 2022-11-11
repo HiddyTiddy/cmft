@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use crate::{Token, LINE_ENDING};
+use crate::{Token, TokenType, LINE_ENDING};
 
 pub fn reconstruct<'a, I>(tokens: I) -> String
 where
@@ -19,13 +19,18 @@ where
         if col < token.location.col {
             out.push_str(" ".repeat(token.location.col - col).as_str());
         }
+
         col = token.location.col + token.token_type.width();
+        line = token.location.line;
+        if matches!(token.token_type, TokenType::Linebreak) {
+            line += 1;
+            col = 0;
+        }
+
         match token.token_type.to_str() {
             Cow::Borrowed(s) => out.push_str(s),
             Cow::Owned(s) => out.push_str(s.as_str()),
         }
-
-        line = token.location.line;
     }
     // todo!("{out:?}")
     out
@@ -65,7 +70,6 @@ mod tests {
         assert_eq!(program, reconstructed);
     }
 
-    #[ignore]
     #[test]
     fn newline() {
         let program = "abc;\n       ed;";

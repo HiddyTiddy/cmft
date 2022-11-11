@@ -1,4 +1,4 @@
-use crate::{Location, OpType, PunctType, Token, TokenType};
+use crate::{Location, OpType, PunctType, Token, TokenType, LINE_ENDING};
 
 #[derive(Debug)]
 pub struct Tokenizer<'a> {
@@ -74,6 +74,10 @@ impl<'a> Tokenizer<'a> {
     }
 }
 
+fn handle_newline<'a>(data: &'a str, nl: &'static str) -> Option<&'a str> {
+    data.starts_with(nl).then_some(&data[nl.len()..])
+}
+
 impl<'a> Iterator for Tokenizer<'a> {
     type Item = Token<'a>;
 
@@ -81,6 +85,16 @@ impl<'a> Iterator for Tokenizer<'a> {
         let mut iter = self.data.char_indices();
         while let Some((i, ch)) = iter.next() {
             let before = &self.data[..i];
+            if let Some(data) = handle_newline(self.data, LINE_ENDING) {
+                self.data = data;
+                let loc = Location::new(self.row, self.col);
+                self.row += 1;
+                self.col = 0;
+                return Some(Token {
+                    token_type: TokenType::Linebreak,
+                    location: loc,
+                });
+            }
 
             match ch {
                 ';' => {
