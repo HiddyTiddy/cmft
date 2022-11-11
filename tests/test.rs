@@ -15,7 +15,7 @@ mod tests {
             let file_name_out = file_name_in.replace(".in", ".out");
             let input  = fs::read_to_string(file_name_in).unwrap();
             let output = fs::read_to_string(file_name_out).unwrap();
-            let result = input;//cmft::format_string(input);
+            let result = cmft::format_string(input);
             if !result.eq(&output)
             {
                 failed_cases.push(file_name_in.to_string());
