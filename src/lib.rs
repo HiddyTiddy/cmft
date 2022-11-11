@@ -2,6 +2,7 @@
 mod reconstruct;
 mod token;
 mod tokenizer;
+mod filters;
 
 pub(crate) const LINE_ENDING: &str = "\n";
 
