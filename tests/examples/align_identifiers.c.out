@@ -1,0 +1,2 @@
+int           c                     = 3;
+unsigned char align_identifiers_too = 4;

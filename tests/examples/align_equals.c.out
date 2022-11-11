@@ -1,0 +1,2 @@
+int global1          = 3;
+int long_global_name = 3;

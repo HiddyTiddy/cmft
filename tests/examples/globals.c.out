@@ -1,7 +1,0 @@
-int global1          = 3;
-int long_global_name = 3;
-
-
-//
-int  c                     = 3;
-char align_identifiers_too = 4;
